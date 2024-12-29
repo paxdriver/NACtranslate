@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-// import WebSocket from 'ws';
 
 const MicrophoneCapture = () => {
   const [status, setStatus] = useState('');
@@ -7,11 +6,23 @@ const MicrophoneCapture = () => {
   const audioContextRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const audioProcessorRef = useRef(null);
+  const workletNodeRef = useRef(null)
 
   const handleMicAccess = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setStatus('Microphone connected');
+
+      // Initialize AudioContext
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      mediaStreamRef.current = stream;
+      
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+
+      // Establish pcm-processor, the AudioWorklet that will convert the audio stream to compatible format
+      await audioContextRef.current.audioWorklet.addModule('/pcmProcessor.js')
+      // Create audio worklet node
+      workletNodeRef.current = new AudioWorkletNode(audioContextRef.current, 'pcm-processor')
 
       // Initialize WebSocket
       const ws = new WebSocket('ws://localhost:8000');
@@ -20,36 +31,16 @@ const MicrophoneCapture = () => {
       ws.onerror = (err) => console.error('WebSocket error:', err);
       ws.onclose = () => console.log('WebSocket connection closed');
 
-      // Initialize AudioContext
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      mediaStreamRef.current = stream;
-
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-
-      // Create ScriptProcessorNode for capturing audio data
-      audioProcessorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
-      source.connect(audioProcessorRef.current);
-      audioProcessorRef.current.connect(audioContextRef.current.destination);
-
-      // Process audio data
-      audioProcessorRef.current.onaudioprocess = (event) => {
-        const audioData = event.inputBuffer.getChannelData(0); // Get channel 0
-        const int16Array = new Int16Array(audioData.length);
-
-        // Convert Float32 to Int16
-        for (let i = 0; i < audioData.length; i++) {
-          int16Array[i] = Math.min(1, audioData[i]) * 0x7FFF; // Scale and clamp
+      // Send PCM data to WebSocket
+      workletNodeRef.current.port.onmessage = event => {
+        if (ws.readyState === WebSocket.OPEN){
+          ws.send(event.data)
         }
+      }
+      
+      // Connect the audio source to the worklet
+      source.connect(workletNodeRef.current)
 
-        // Send data to backend
-        sendAudioData(int16Array);
-      };
-
-      const sendAudioData = (data) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(data.buffer); // Send raw audio data to backend
-        }
-      };
     } catch (error) {
       setStatus('Failed to connect microphone');
       console.error(error);
@@ -57,6 +48,19 @@ const MicrophoneCapture = () => {
   };
 
   const handleStopMic = () => {
+    if (workletNodeRef.current) {
+      workletNodeRef.current.port.close()
+      workletNodeRef.current.disconnect()
+      workletNodeRef.current = null
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach( track => track.stop() )
+      mediaStreamRef.current = null
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close()
+      audioContextRef.current = null
+    }
     if (audioProcessorRef.current) {
       audioProcessorRef.current.disconnect();
       audioProcessorRef.current = null;
@@ -73,8 +77,28 @@ const MicrophoneCapture = () => {
       socket.close(); // Close WebSocket connection
       setSocket(null);
     }
-    setStatus('Microphone disconnected');
-  };
+    setStatus("Microphone disconnected")
+  }
+
+  // const handleStopMic = () => {
+  //   if (audioProcessorRef.current) {
+  //     audioProcessorRef.current.disconnect();
+  //     audioProcessorRef.current = null;
+  //   }
+  //   if (mediaStreamRef.current) {
+  //     mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+  //     mediaStreamRef.current = null;
+  //   }
+  //   if (audioContextRef.current) {
+  //     audioContextRef.current.close();
+  //     audioContextRef.current = null;
+  //   }
+  //   if (socket) {
+  //     socket.close(); // Close WebSocket connection
+  //     setSocket(null);
+  //   }
+  //   setStatus('Microphone disconnected');
+  // };
 
   return (
     <div>
