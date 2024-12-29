@@ -2,10 +2,10 @@ import React, { useState, useRef } from 'react';
 
 const MicrophoneCapture = () => {
   const [status, setStatus] = useState('');
-  const [socket, setSocket] = useState(null); // Add state for WebSocket
+  const [socket, setSocket] = useState(null); // Added state for WebSocket, may not be necessary
   const audioContextRef = useRef(null);
   const mediaStreamRef = useRef(null);
-  const audioProcessorRef = useRef(null);
+  // const audioProcessorRef = useRef(null); // was used for streamprocessor before switching to audioworkletnode
   const workletNodeRef = useRef(null)
 
   const handleMicAccess = async () => {
@@ -16,6 +16,15 @@ const MicrophoneCapture = () => {
       // Initialize AudioContext
       audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
       mediaStreamRef.current = stream;
+
+
+      // Add a DynamicsCompressorNode to normalize audio
+      const compressor = audioContextRef.current.createDynamicsCompressor();
+      compressor.threshold.setValueAtTime(-50, audioContextRef.current.currentTime); // Adjust threshold
+      compressor.knee.setValueAtTime(40, audioContextRef.current.currentTime);      // Smoother transition
+      compressor.ratio.setValueAtTime(12, audioContextRef.current.currentTime);     // Compression ratio
+      compressor.attack.setValueAtTime(0.003, audioContextRef.current.currentTime); // Attack time
+      compressor.release.setValueAtTime(0.25, audioContextRef.current.currentTime); // Release time
       
       const source = audioContextRef.current.createMediaStreamSource(stream);
 
@@ -37,7 +46,7 @@ const MicrophoneCapture = () => {
           ws.send(event.data)
         }
       }
-      
+
       // Connect the audio source to the worklet
       source.connect(workletNodeRef.current)
 
@@ -60,18 +69,6 @@ const MicrophoneCapture = () => {
     if (audioContextRef.current) {
       audioContextRef.current.close()
       audioContextRef.current = null
-    }
-    if (audioProcessorRef.current) {
-      audioProcessorRef.current.disconnect();
-      audioProcessorRef.current = null;
-    }
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
     }
     if (socket) {
       socket.close(); // Close WebSocket connection
