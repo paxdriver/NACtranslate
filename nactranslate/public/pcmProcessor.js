@@ -1,5 +1,7 @@
 const BUFFER_SIZE = 96000 // 3 seconds is probably too short
+// const BUFFER_SIZE = 4096 
 // const BUFFER_SIZE = 96000*3 // 9 seconds
+// const BUFFER_SIZE = 96000*5 // 3 seconds is probably too short
 
 class PCMProcessor extends AudioWorkletProcessor {
     constructor() {

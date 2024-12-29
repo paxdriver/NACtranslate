@@ -35,20 +35,24 @@ const MicrophoneCapture = () => {
 
       // Initialize WebSocket
       const ws = new WebSocket('ws://localhost:8000');
-      setSocket(ws);
       ws.onopen = () => console.log('WebSocket connection established');
-      ws.onerror = (err) => console.error('WebSocket error:', err);
+      ws.onerror = err => console.error('WebSocket error:', err);
       ws.onclose = () => console.log('WebSocket connection closed');
+      setSocket(ws)
 
       // Send PCM data to WebSocket
       workletNodeRef.current.port.onmessage = event => {
-        if (ws.readyState === WebSocket.OPEN){
+        if (ws !== null && ws.readyState === WebSocket.OPEN){
           ws.send(event.data)
         }
       }
 
       // Connect the audio source to the worklet
-      source.connect(workletNodeRef.current)
+      // source.connect(workletNodeRef.current)
+      
+      // Connect source -> compressor -> worklet
+      source.connect(compressor)
+      compressor.connect(workletNodeRef.current)
 
     } catch (error) {
       setStatus('Failed to connect microphone');
@@ -70,32 +74,12 @@ const MicrophoneCapture = () => {
       audioContextRef.current.close()
       audioContextRef.current = null
     }
-    if (socket) {
+    if (socket !== null) {
       socket.close(); // Close WebSocket connection
       setSocket(null);
     }
     setStatus("Microphone disconnected")
   }
-
-  // const handleStopMic = () => {
-  //   if (audioProcessorRef.current) {
-  //     audioProcessorRef.current.disconnect();
-  //     audioProcessorRef.current = null;
-  //   }
-  //   if (mediaStreamRef.current) {
-  //     mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-  //     mediaStreamRef.current = null;
-  //   }
-  //   if (audioContextRef.current) {
-  //     audioContextRef.current.close();
-  //     audioContextRef.current = null;
-  //   }
-  //   if (socket) {
-  //     socket.close(); // Close WebSocket connection
-  //     setSocket(null);
-  //   }
-  //   setStatus('Microphone disconnected');
-  // };
 
   return (
     <div>
