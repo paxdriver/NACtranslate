@@ -1,0 +1,3 @@
+This folder should contain speech models needed for text to speech translations. Not included in the repo due to size and redundancy, but find the language models you want to include at: https://alphacephei.com/vosk/models
+
+python-scripts/speech-to-text.py will look for models at "../vosk-models/"
