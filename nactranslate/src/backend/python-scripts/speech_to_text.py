@@ -1,9 +1,15 @@
 from vosk import Model, KaldiRecognizer
 from flask import Flask, request
-import wave
+import wave  # Required for testing with a file instead of a stream
 import io  # Required for handling in-memory streams
 import os # Required for robustly handling relative paths
 import json # Required for the parsing of the API responses
+
+# NOTE: this buffer_size MUST match the BUFFER_SIZE in pcmProcessor.js. keep fine-tuning things but make sure that the values are updated in both places every time or nothing will work and no errors will be helpful.
+BUFFER_SIZE = 48000 *5
+# BUFFER_SIZE = 4096 # 256ms
+# BUFFER_SIZE = 48000
+# BUFFER_SIZE = 96000 # 96000 = 6 seconds
 
 app = Flask(__name__)
 
@@ -15,31 +21,91 @@ model_path = os.path.join(parent_dir, "vosk-models/vosk-model-small-en-us-0.15")
 # Load the Vosk model
 model = Model(model_path)
 
+############ DEBUGGING #######################
+
+# def save_chunk_as_wav(data, file_path, sample_rate=16000, channels=1):
+#     with wave.open(file_path, 'wb') as wav_file:
+#         wav_file.setnchannels(channels)
+#         wav_file.setsampwidth(2)
+#         wav_file.setframerate(sample_rate)
+#         wav_file.writeframes(data)
+#     print(f"Saved wav file: {file_path}")
+
+# def chunk_saver(output_dir):
+#     """
+#     Generator-based function to save audio chunks with incrementing file names.
+
+#     :param output_dir: Directory to save audio chunks.
+#     """
+#     counter = 0
+#     while True:
+#         chunk = yield  # Receive the chunk from the caller
+#         if chunk:
+#             file_name = f"chunk_{counter:04d}.wav"
+#             file_path = os.path.join(output_dir, file_name)
+#             # with open(file_path, "wb") as f:
+#             #     f.write(chunk)
+#             # print(f"Saved chunk {counter} as {file_path}")
+#             save_chunk_as_wav(chunk, file_path)
+#             counter += 1
+
+# output_dir = "debug_audio_chunks"
+# os.makedirs(output_dir, exist_ok=True)
+# chunk_saver_gen = chunk_saver(output_dir)
+# next(chunk_saver_gen)  # Prime the generator
+
+############ DEBUGGING #######################
+
 @app.route("/process_audio", methods=["POST"])
 def process_audio():
-    file = request.files['file']
+    # file = request.files['file']
 
+    ########################################### DEV NOTE: ##############################
     # Convert FileStorage to a byte stream
-    audio_stream = io.BytesIO(file.read())
+    audio_stream = io.BytesIO(request.data) # Read raw PCM data from message contents in request from wsserver worklet
+    # data = audio_stream.read(4096)
+    
+    ###########################################
+    
+    recognizer = KaldiRecognizer(model, 16000) # Vosk will be provided with fixed 16KHz sample rate
+    transcription = ""
 
-    # Open the byte stream as a WAV file
-    with wave.open(audio_stream, "rb") as audio:
-        recognizer = KaldiRecognizer(model, audio.getframerate())
-        transcription = ""
-
-        while True:
-            data = audio.readframes(4000)
-            if len(data) == 0:
-                break
-            if recognizer.AcceptWaveform(data):
-                result = json.loads(recognizer.Result())
-                transcription += result.get("text", "")
+    while True:
+        data = audio_stream.read(BUFFER_SIZE)
+        if len(data) == 0:
+            break
+        
+        #DEBUGGING
+        # chunk_saver_gen.send(data)
+        #DEBUGGING
+        if recognizer.AcceptWaveform(data):  # Test single chunk
+            result = json.loads(recognizer.Result())
+            print("Single chunk result:", result)
+            transcription += result.get("text", "")
+        else:
+            partial_result = json.loads(recognizer.PartialResult())
+            print("Partial result:", partial_result)
 
     return {"text": transcription}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
 
+
+    # Open the byte stream as a WAV file
+    # with wave.open(audio_stream, "rb") as audio:
+    #     recognizer = KaldiRecognizer(model, audio.getframerate())
+    #     transcription = ""
+
+    #     while True:
+    #         data = audio.readframes(4000)
+    #         if len(data) == 0:
+    #             break
+    #         if recognizer.AcceptWaveform(data):
+    #             result = json.loads(recognizer.Result())
+    #             transcription += result.get("text", "")
+
+    # return {"text": transcription}
 
 ###############################
 # INSTRUCTIONS AND USEFUL COMMANDS

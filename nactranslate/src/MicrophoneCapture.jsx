@@ -5,7 +5,6 @@ const MicrophoneCapture = () => {
   const [socket, setSocket] = useState(null); // Added state for WebSocket, may not be necessary
   const audioContextRef = useRef(null);
   const mediaStreamRef = useRef(null);
-  // const audioProcessorRef = useRef(null); // was used for streamprocessor before switching to audioworkletnode
   const workletNodeRef = useRef(null)
 
   const handleMicAccess = async () => {
@@ -14,7 +13,7 @@ const MicrophoneCapture = () => {
       setStatus('Microphone connected');
 
       // Initialize AudioContext
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = new window.AudioContext({sampleRate: 16000})
       mediaStreamRef.current = stream;
 
 
@@ -49,7 +48,6 @@ const MicrophoneCapture = () => {
 
       // Connect the audio source to the worklet
       // source.connect(workletNodeRef.current)
-      
       // Connect source -> compressor -> worklet
       source.connect(compressor)
       compressor.connect(workletNodeRef.current)
