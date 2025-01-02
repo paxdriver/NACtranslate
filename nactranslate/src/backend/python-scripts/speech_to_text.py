@@ -6,7 +6,7 @@ import os # Required for robustly handling relative paths
 import json # Required for the parsing of the API responses
 
 # NOTE: this buffer_size MUST match the BUFFER_SIZE in pcmProcessor.js. keep fine-tuning things but make sure that the values are updated in both places every time or nothing will work and no errors will be helpful.
-BUFFER_SIZE = 48000 *5
+BUFFER_SIZE = 48000 * 5
 # BUFFER_SIZE = 4096 # 256ms
 # BUFFER_SIZE = 48000
 # BUFFER_SIZE = 96000 # 96000 = 6 seconds
@@ -23,36 +23,36 @@ model = Model(model_path)
 
 ############ DEBUGGING #######################
 
-# def save_chunk_as_wav(data, file_path, sample_rate=16000, channels=1):
-#     with wave.open(file_path, 'wb') as wav_file:
-#         wav_file.setnchannels(channels)
-#         wav_file.setsampwidth(2)
-#         wav_file.setframerate(sample_rate)
-#         wav_file.writeframes(data)
-#     print(f"Saved wav file: {file_path}")
+def save_chunk_as_wav(data, file_path, sample_rate=16000, channels=1):
+    with wave.open(file_path, 'wb') as wav_file:
+        wav_file.setnchannels(channels)
+        wav_file.setsampwidth(2)
+        wav_file.setframerate(sample_rate)
+        wav_file.writeframes(data)
+    print(f"Saved wav file: {file_path}")
 
-# def chunk_saver(output_dir):
-#     """
-#     Generator-based function to save audio chunks with incrementing file names.
+def chunk_saver(output_dir):
+    """
+    Generator-based function to save audio chunks with incrementing file names.
 
-#     :param output_dir: Directory to save audio chunks.
-#     """
-#     counter = 0
-#     while True:
-#         chunk = yield  # Receive the chunk from the caller
-#         if chunk:
-#             file_name = f"chunk_{counter:04d}.wav"
-#             file_path = os.path.join(output_dir, file_name)
-#             # with open(file_path, "wb") as f:
-#             #     f.write(chunk)
-#             # print(f"Saved chunk {counter} as {file_path}")
-#             save_chunk_as_wav(chunk, file_path)
-#             counter += 1
+    :param output_dir: Directory to save audio chunks.
+    """
+    counter = 0
+    while True:
+        chunk = yield  # Receive the chunk from the caller
+        if chunk:
+            file_name = f"chunk_{counter:04d}.wav"
+            file_path = os.path.join(output_dir, file_name)
+            # with open(file_path, "wb") as f:
+            #     f.write(chunk)
+            # print(f"Saved chunk {counter} as {file_path}")
+            save_chunk_as_wav(chunk, file_path)
+            counter += 1
 
-# output_dir = "debug_audio_chunks"
-# os.makedirs(output_dir, exist_ok=True)
-# chunk_saver_gen = chunk_saver(output_dir)
-# next(chunk_saver_gen)  # Prime the generator
+output_dir = "debug_audio_chunks"
+os.makedirs(output_dir, exist_ok=True)
+chunk_saver_gen = chunk_saver(output_dir)
+next(chunk_saver_gen)  # Prime the generator
 
 ############ DEBUGGING #######################
 
@@ -76,7 +76,7 @@ def process_audio():
             break
         
         #DEBUGGING
-        # chunk_saver_gen.send(data)
+        chunk_saver_gen.send(data)
         #DEBUGGING
         if recognizer.AcceptWaveform(data):  # Test single chunk
             result = json.loads(recognizer.Result())

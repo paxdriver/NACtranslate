@@ -1,7 +1,8 @@
-const BUFFER_SIZE = 96000 // 3 seconds is probably too short
-// const BUFFER_SIZE = 4096 
-// const BUFFER_SIZE = 96000*3 // 9 seconds
-// const BUFFER_SIZE = 96000*5 // 3 seconds is probably too short
+// const BUFFER_SIZE = 96000 // 6 seconds, works but the final results are often being dropped
+const BUFFER_SIZE = 48000 * 5 // works pretty well and produces final result but needs a long wait for the final result to appear.
+// const BUFFER_SIZE = 48000 // works, but frequently drops words captured in the final result, even though it translated them just fine in the partial result while still speaking.
+// const BUFFER_SIZE = 4096 // 256ms of audio, produces not meaningful outputs at all, not even partial results.
+
 
 class PCMProcessor extends AudioWorkletProcessor {
     constructor() {
