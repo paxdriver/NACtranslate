@@ -6,30 +6,27 @@ const MicrophoneCapture = () => {
   const audioContextRef = useRef(null)
   const mediaStreamRef = useRef(null)
   const workletNodeRef = useRef(null)
+  const socketRef = useRef(null)  // Used to store the socket so it can be used by language selection handler to update metadata
   const [subtitles, setSubtitles] = useState("TESTING")
   const [langselections, setLangselections] = useState({from: "en", to: "fr"}) // default english to french
   
   const handleLanguageChange = e => {
     const { name, value } = e.target
     console.log(`${name} changed to ${value}`)
-    if (name === "spokenLanguage") {
+    if (name === "spokenLanguage" || name === "transcribedLanguage") {
       setLangselections( prev => {
-        let output = prev
-        output.from = value
-        return {...output}
-      })
-    }
-    else if (name === "transcribedLanguage") {
-      setLangselections( prev => {
-        let output = prev
-        output.to = value
-        return {...output}
+        // Depending on which of the selection options are changed, this will update the state key pertaining to that selection box
+        const updatedConfig = (name === "spokenLanguage") ? { ...prev, from: value } : { ...prev, to: value}  
+        
+        // send the updated config to the WebSocket
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+          socketRef.current.send(JSON.stringify(updatedConfig))
+        }
       })
     }
     else {
       console.error("An error has occurred with the language handler function in the MicrophoneCapture component! This should never happen, there's a logical error that needs to be resolved!!!")
     }
-
   }
 
 
@@ -45,8 +42,8 @@ const MicrophoneCapture = () => {
       // Add a DynamicsCompressorNode to normalize audio
       const compressor = audioContextRef.current.createDynamicsCompressor()
       compressor.threshold.setValueAtTime(-50, audioContextRef.current.currentTime) // Adjust threshold
-      compressor.knee.setValueAtTime(40, audioContextRef.current.currentTime)   // Smoother transition
-      compressor.ratio.setValueAtTime(12, audioContextRef.current.currentTime)  // Compression ratio
+      compressor.knee.setValueAtTime(40, audioContextRef.current.currentTime)       // Smoother transition
+      compressor.ratio.setValueAtTime(12, audioContextRef.current.currentTime)      // Compression ratio
       compressor.attack.setValueAtTime(0.003, audioContextRef.current.currentTime)  // Attack time
       compressor.release.setValueAtTime(0.25, audioContextRef.current.currentTime)  // Release time
       
@@ -59,6 +56,7 @@ const MicrophoneCapture = () => {
 
       // Initialize WebSocket
       const ws = new WebSocket('ws://localhost:8000')
+      socketRef.current = ws      // for language selection handler access
       ws.onopen = () => console.log('WebSocket connection established')
       ws.onerror = err => console.error('WebSocket error:', err)
       ws.onclose = () => console.log('WebSocket connection closed')
@@ -74,12 +72,7 @@ const MicrophoneCapture = () => {
       // Send PCM data to WebSocket
       workletNodeRef.current.port.onmessage = event => {
         if (ws !== null && ws.readyState === WebSocket.OPEN){
-          // socket expect string, so data must be passed serialized, and then de-serialized on the other end...
-
-
-    // WORK IN PROGRESS: NEED TO SEND THE DATA FOR THE LANGUAGE AND THE AUDIO BINARY DATA SEPARATELY BECAUSE JSON CONVERSION CORRUPTS THE AUDIO.
-
-          ws.send(JSON.stringify({data: event.data, lang_to: langselections.to, lang_from: langselections.from }))
+          ws.send(event.data) // audio stream binary data
         }
       }
 
