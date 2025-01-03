@@ -7,9 +7,8 @@ const MicrophoneCapture = () => {
   const mediaStreamRef = useRef(null)
   const workletNodeRef = useRef(null)
   const socketRef = useRef(null)  // Used to store the socket so it can be used by language selection handler to update metadata
-  const [subtitles, setSubtitles] = useState("TESTING")
+  const [subtitles, setSubtitles] = useState("")
   const [langselections, setLangselections] = useState({from: "en", to: "fr"}) // default english to french
-  // NOTE: langselections isn't being used, it's just storing WebSocket metadata settings right now in case an app component crashes and forces a re-render
   
   const handleLanguageChange = e => {
     const { name, value } = e.target
@@ -21,8 +20,9 @@ const MicrophoneCapture = () => {
         
         // send the updated config to the WebSocket
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-          socketRef.current.send(JSON.stringify(updatedConfig))
+          socketRef.current.send(JSON.stringify(updatedConfig)) // don't send binary data stream, just update the language configurations sent to Flask through the POST request headers.
         }
+        return updatedConfig
       })
     }
     else {
@@ -58,13 +58,17 @@ const MicrophoneCapture = () => {
       // Initialize WebSocket
       const ws = new WebSocket('ws://localhost:8000')
       socketRef.current = ws      // for language selection handler access
-      ws.onopen = () => console.log('WebSocket connection established')
+      ws.onopen = () => { 
+        console.log('WebSocket connection established')
+        if (langselections) ws.send(JSON.stringify(langselections))
+        else ws.send(JSON.stringify({from: "en", to: "ru"}))
+      }
       ws.onerror = err => console.error('WebSocket error:', err)
       ws.onclose = () => console.log('WebSocket connection closed')
       ws.onmessage = event => {
         const wsResponse = event.data
         setSubtitles(prev => {
-          const output = (wsResponse !== '') ? `${wsResponse}\n${prev}` : prev
+          const output = (wsResponse !== '') ? `-${wsResponse}\n\n${prev}` : prev
           return output
         }) // response back from worklet containing translated subtitles to update the displayed text.
       }
@@ -112,21 +116,41 @@ const MicrophoneCapture = () => {
   return (
     <div>
       {/* Language Selection Input / Output */}
-      <div style={{textAlign: 'center', margin: '1rem', padding: '2rem', backgroundColor: 'rgba(180,180,180,0.25)', border: '3px dashed black'}} >
-        <div>
+      <div style={{textAlign: 'center', margin: '0.25rem', padding: '0.25rem', backgroundColor: 'rgba(180,180,180,0.25)', border: '3px dashed black'}} >
+        <div><strong>
+
           <label>Language Spoken:
-          <select name="spokenLanguage" onChange={handleLanguageChange} style={{margin: '0 3rem'}}>
+          <select disabled={status === 'Microphone connected'} name="spokenLanguage"
+            onChange={handleLanguageChange} 
+            style={{margin: '0 3rem'}}
+          >
             <option value='en'>English</option>
             <option value='fr'>French</option>
+            <option value='ru'>Russian</option>
+            <option value='uk'>Ukrainian</option>
+            <option value='de'>German</option>
+            <option value='ar'>Arabic</option>
+            <option value='ca'>Catalan</option>
+            <option value='pt'>Portuguese</option>
+            <option value='tl'>Tagalog (Phillippines)</option>
           </select>
           </label>
+
           <label>Language Transcribed:
           <select name="transcribedLanguage" onChange={handleLanguageChange} style={{margin: '0 3rem'}}>
             <option value='fr'>French</option>
             <option value='en'>English</option>
+            <option value='ru'>Russian</option>
+            <option value='de'>German</option>
+            <option value='uk'>Ukrainian</option>
+            <option value='ar'>Arabic</option>
+            <option value='ca'>Catalan</option>
+            <option value='pt'>Portuguese</option>
+            <option value='tl'>Tagalog (Phillippines)</option>
           </select>
           </label>
-        </div>
+
+        </strong></div>
 
       </div>
 
@@ -139,7 +163,7 @@ const MicrophoneCapture = () => {
         <strong><p>{status}</p></strong>
       </div>
       {/* Text area for the translated output to appear. */}
-      <p id="subtitlesText" style={{border: '5px inset black', height: '300px', width: '80vw', fontSize: '2rem'}}>{subtitles}</p>
+      <pre id="subtitlesText" style={{whiteSpace: 'pre-wrap', wordWrap: 'break-word', border: '5px inset black', height: '50vh', width: '80vw', fontSize: '1rem', textAlign: 'left', overflowY: 'scroll'}}>{subtitles}</pre>
     </div>
   )
 }

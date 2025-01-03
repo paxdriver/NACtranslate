@@ -1,25 +1,41 @@
 from vosk import Model, KaldiRecognizer
 from flask import Flask, request
-import wave  # Required for testing with a file instead of a stream
+# import wave  # Required for testing with a file instead of a stream
 import io  # Required for handling in-memory streams
 import os # Required for robustly handling relative paths
 import json # Required for the parsing of the API responses
+import argostranslate.package
+import argostranslate.translate
+
+# Provide the language codes from, translated to, and the text that is being translated. Outputs text in the other language as expected
+def translate_text(from_lang: str, to_lang: str, text: str) -> str:
+    installed_languages = argostranslate.translate.get_installed_languages()
+    from_language = next(filter(lambda x: x.code == from_lang, installed_languages), None)
+    to_language = next(filter(lambda x: x.code == to_lang, installed_languages), None)
+    
+    if from_language and to_language and text and isinstance(text, str):
+        translation = from_language.get_translation(to_language).translate(text) # type: ignore
+        return translation
+    else: return ""
+    
 
 # NOTE: this buffer_size MUST match the BUFFER_SIZE in pcmProcessor.js. keep fine-tuning things but make sure that the values are updated in both places every time or nothing will work and no errors will be helpful.
-BUFFER_SIZE = 48000 * 5
 # BUFFER_SIZE = 4096 # 256ms
-# BUFFER_SIZE = 48000
 # BUFFER_SIZE = 96000 # 96000 = 6 seconds
+BUFFER_SIZE = 48000 * 5
+VOSK_MODELS: dict[str, str] = {
+    "en": "vosk-models/vosk-model-small-en-us-0.15",
+    "fr": "vosk-models/vosk-model-small-fr-0.22",
+    "ru": "vosk-models/vosk-model-small-ru-0.22",
+    "pt": "vosk-models/vosk-model-small-pt-0.3",
+    "uk": "vosk-models/vosk-model-small-uk-v3-small",
+    "tl": "vosk-models/vosk-model-small-tl-ph-generic-0.6",
+    "de": "vosk-models/vosk-model-small-de-0.15",
+    "ar": "vosk-models/vosk-model-small-ar-tn-0.1-linto",
+    "ca": "vosk-models/vosk-model-small-ca-0.4"
+}
 
 app = Flask(__name__)
-
-# Get the absolute path to the Vosk model
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-model_path = os.path.join(parent_dir, "vosk-models/vosk-model-small-en-us-0.15")
-
-# Load the Vosk model
-model = Model(model_path)
 
 ############ DEBUGGING #######################
 
@@ -56,14 +72,43 @@ model = Model(model_path)
 
 ############ DEBUGGING #######################
 
-@app.route("/process_audio", methods=["POST"])
+
+@app.route("/process_audio", methods=["POST"])  # type: ignore
 def process_audio():
     # file = request.files['file']
-
+    
     ########################################### DEV NOTE: ##############################
     # Convert FileStorage to a byte stream
     audio_stream = io.BytesIO(request.data) # Read raw PCM data from message contents in request from wsserver worklet
     ###########################################
+    
+    # From and To languages are provided to the websocket and stored in app state. Event handler is triggered when they're updated, and that sends a serialized message (not audio stream) to the open websocket and tells it to update the variable used to store the current language configuration. When a post request hits this endpoint, the from and to language configuration strings are provided to the header sent with the post request, and that's were we get them from to provide to the translate function.
+    from_lang = request.headers.get('Lang-From', "en")
+    to_lang = request.headers.get('Lang-To', "ru")
+    
+    # Get the absolute path to the Vosk model
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    
+    try:
+        vosk_model_filepath = VOSK_MODELS.get(from_lang)
+        # vosk_model_filepath = VOSK_MODELS.get(from_lang)
+        if vosk_model_filepath and vosk_model_filepath != None:
+            model_path = os.path.join(parent_dir, vosk_model_filepath)
+        else:
+            print("-"*25)
+            print("ERROR!!!! Unable to retrieve vosk model from supplied filepath. The vosk models are expected to be ../vosk-models/vosk-model-small... which is a folder extracted from the zip files obtained here: https://alphacephei.com/vosk/models") 
+            print("-"*25)
+            
+    except:
+        print("Was unable to resolve spoken language model selection! check these variables and see which is not being represented accurately:")
+        print("from language spoken via POST headers:")
+        print(from_lang)
+        print("Vosk models and their path names:")
+        print(VOSK_MODELS)
+
+    # Load the Vosk model
+    model = Model(model_path)
     
     recognizer = KaldiRecognizer(model, 16000) # Vosk will be provided with fixed 16KHz sample rate
     transcription = ""
@@ -76,6 +121,7 @@ def process_audio():
         #DEBUGGING
         # chunk_saver_gen.send(data)    # saves chunks to wav files so they can be inspected in audacity or similar audio editing software
         #DEBUGGING
+        
         if recognizer.AcceptWaveform(data):  # Test single chunk
             result = json.loads(recognizer.Result())
             print("Single chunk result:", result)
@@ -83,12 +129,12 @@ def process_audio():
         else:
             partial_result = json.loads(recognizer.PartialResult())
             print("Partial result:", partial_result)
-
-    return {"text": transcription}
+    if from_lang and to_lang and from_lang != to_lang: 
+        return {"text": translate_text(from_lang, to_lang, transcription)}
+    elif to_lang == from_lang: return {"text": transcription}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
 
     # Open the byte stream as a WAV file
     # with wave.open(audio_stream, "rb") as audio:
