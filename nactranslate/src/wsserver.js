@@ -29,9 +29,10 @@ wss.on('connection', ws => {
                 const parsedMessage = JSON.parse(message) // the message is config, not binary audio stream data
                 /* received config object looks like this:
                     {
-                        spokenLanguage: 'en',
-                        transcribedLanguage: 'fr'
+                        from: 'en',
+                        to: 'fr'
                     }
+                    from the selection options "spokenLanguage" and "transcribedLanguage"
                 */
                 languageConfig = parsedMessage // store current metadata settings for translation languages
                 console.log("---- languageConfig is now: -----")

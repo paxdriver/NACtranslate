@@ -9,6 +9,7 @@ const MicrophoneCapture = () => {
   const socketRef = useRef(null)  // Used to store the socket so it can be used by language selection handler to update metadata
   const [subtitles, setSubtitles] = useState("TESTING")
   const [langselections, setLangselections] = useState({from: "en", to: "fr"}) // default english to french
+  // NOTE: langselections isn't being used, it's just storing WebSocket metadata settings right now in case an app component crashes and forces a re-render
   
   const handleLanguageChange = e => {
     const { name, value } = e.target
