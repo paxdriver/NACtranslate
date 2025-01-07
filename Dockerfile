@@ -1,0 +1,43 @@
+# Use the official Python image with a specific version
+FROM python:3.10-slim
+
+# Create non-root user for this Flask API endpoint image
+RUN useradd -m flaskuser
+
+# Switch to the non-root flaskuser
+USER flaskuser
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the requirements file and install dependencies
+COPY ./python-scripts/requirements.txt ./python-scripts/
+
+# Update and install dependencies to python environment, without the recommended packages to keep the image clean and small
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential libffi-dev libfftw3-dev && pip install --no-cache-dir -r ./python-scripts/requirements.txt
+
+# Clean up after installation to reduce the final image size
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy the script that downloads and installs the text-to-text translation models to the python environment
+COPY ./python-scripts/get_argos_models.py ./python-scripts/
+RUN ["python3", "./python-scripts/get_argos_models.py"]
+
+# Copy the API to the container
+COPY ./python-scripts/speech_to_text.py ./python-scripts/
+
+# Ensure your models are included
+COPY ./vosk-models ./vosk-models
+# Remove the zip files, keeping only the extracted folders needed for the app
+RUN find ./vosk-models -name '*.zip' -delete
+
+# Expose the port Flask will run on
+EXPOSE 5000
+
+# Run the Flask app
+CMD ["python3", "./python-scripts/speech_to_text.py"]
+
+
+# TEST WITH...
+# docker build -t flask-api .
+# docker run --rm -p 5000:5000 flask-api

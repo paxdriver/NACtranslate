@@ -19,7 +19,10 @@ wss.on('connection', ws => {
                     console.error("No language configuration metadata received!")
                 }
                 // send flask server audio stream chunk to be transcribed and translated
-                const response = await axios.post('http://localhost:5000/process_audio', message, 
+                
+                // NOTE: for containers in docker, use "api" instead of "localhost" because CORS issues will prevent the containers from speaking to one another when networked as separate containers. Proxy for /api/process_audio is specified in nginx.conf
+                // const response = await axios.post('http://localhost:5000/process_audio', message, 
+                const response = await axios.post('http://api/process_audio', message, 
                     {headers: {
                         'Content-Type': 'application/octet-stream',
                         'Lang-From': languageConfig.from,
