@@ -4,9 +4,6 @@ FROM python:3.10-slim
 # Create non-root user for this Flask API endpoint image
 RUN useradd -m flaskuser
 
-# Switch to the non-root flaskuser
-USER flaskuser
-
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -18,6 +15,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 
 # Clean up after installation to reduce the final image size
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Ensure scripts have the correct permissions
+RUN chmod +x ./python-scripts/get_argos_models.py ./python-scripts/speech_to_text.py
+
+# Switch to the non-root flaskuser
+USER flaskuser
 
 # Copy the script that downloads and installs the text-to-text translation models to the python environment
 COPY ./python-scripts/get_argos_models.py ./python-scripts/
