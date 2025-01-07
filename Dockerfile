@@ -11,16 +11,20 @@ WORKDIR /app
 COPY ./python-scripts/requirements.txt ./python-scripts/
 
 # Update and install dependencies to python environment, without the recommended packages to keep the image clean and small
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential libffi-dev libfftw3-dev && pip install --no-cache-dir -r ./python-scripts/requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential libffi-dev libfftw3-dev
 
 # Clean up after installation to reduce the final image size
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Ensure scripts have the correct permissions
-RUN chmod +x ./python-scripts/get_argos_models.py ./python-scripts/speech_to_text.py
+# # Ensure script has the correct permissions
+# RUN chmod +x ./python-scripts/speech_to_text.py
 
 # Switch to the non-root flaskuser
 USER flaskuser
+
+# Install requirements using flaskuser (as opposed to root)
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r ./python-scripts/requirements.txt
 
 # Copy the script that downloads and installs the text-to-text translation models to the python environment
 COPY ./python-scripts/get_argos_models.py ./python-scripts/
@@ -31,6 +35,10 @@ COPY ./python-scripts/speech_to_text.py ./python-scripts/
 
 # Ensure your models are included
 COPY ./vosk-models ./vosk-models
+
+# Ensure scripts have the correct permissions
+RUN chown -R flaskuser:flaskuser ./python-scripts ./vosk-models
+
 # Remove the zip files, keeping only the extracted folders needed for the app
 RUN find ./vosk-models -name '*.zip' -delete
 
