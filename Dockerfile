@@ -37,7 +37,9 @@ COPY ./python-scripts/speech_to_text.py ./python-scripts/
 COPY ./vosk-models ./vosk-models
 
 # Ensure scripts have the correct permissions
+USER root
 RUN chown -R flaskuser:flaskuser ./python-scripts ./vosk-models
+USER flaskuser
 
 # Remove the zip files, keeping only the extracted folders needed for the app
 RUN find ./vosk-models -name '*.zip' -delete
