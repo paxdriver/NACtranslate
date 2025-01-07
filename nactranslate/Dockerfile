@@ -3,7 +3,7 @@ FROM node:18.18.0 AS builder
 
 # Create non-root user for this Flask API endpoint image
 # adduser is alpine base image tool, specific for docker as opposed to useradd -m which creates /home/ etc for normal debian distro users
-RUN useradd -m frontenduser
+# RUN useradd -m frontenduser
 
 # Set the working directory
 WORKDIR /app
@@ -35,24 +35,26 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 RUN apk add --no-cache nodejs npm
 
 # Make sure frontenduser has permissions, set up the websocket with that user instead of root
-COPY ./src/wsserver.js /app/websocket/wsserver.js
-RUN npm init -y && npm install ws
+COPY ./src/wsserver.js /app/websocket/wsserver.mjs
+COPY ./src/backend/websocket-package.json /app/websocket/package.json
+WORKDIR /app/websocket
+# Install WebSocket dependency for the server-side WebSocket as opposed to client which is installed in the app's package.json. This is being installed from a separate package.json stored in /src/backend
+RUN npm install
+
+# Create the non-root user
+RUN adduser -D frontenduser
 
 # Switch to the non-root flaskuser
 RUN chown -R frontenduser:frontenduser /usr/share/nginx /app
 USER frontenduser
+WORKDIR /app
 
 # Expose the port for the app (80) and the websocket server (8000)
 EXPOSE 80 8000
 
 # Start Nginx and the WebSocket Server when the container starts
-CMD ["sh", "-c", "nginx -g 'daemon off;' & node /app/websocket/wsserver.js"]
+CMD ["sh", "-c", "nginx -g 'daemon off;' & node /app/websocket/wsserver.mjs"]
 
 # TEST WITH THESE COMMANDS
 # docker exec -it <container_id> sh
 # node /usr/share/nginx/html/wsserver.js
-
-
-
-# Set the working directory in the container
-WORKDIR /usr/share/nginx/html

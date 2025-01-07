@@ -1,0 +1,9 @@
+{
+    "name": "websocket-server",
+    "version": "0.0.0",
+    "main": "wsserver.mjs",
+    "type": "module",
+    "dependencies": {
+        "ws": "^8.18.0"
+    }
+}
