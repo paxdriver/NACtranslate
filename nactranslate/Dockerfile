@@ -42,11 +42,13 @@ WORKDIR /app/websocket
 RUN npm install
 
 # Create the non-root user
-RUN adduser -D frontenduser
+# RUN adduser -D frontenduser
 
 # Switch to the non-root flaskuser
-RUN chown -R frontenduser:frontenduser /usr/share/nginx /app
-USER frontenduser
+# RUN mkdir -p /var/cache/nginx/client_temp && chown -R frontenduser:frontenduser /usr/share/nginx /app
+# RUN chown -R frontenduser:frontenduser /usr/share/nginx /app
+# RUN chown -R frontenduser:frontenduser /
+# USER frontenduser
 WORKDIR /app
 
 # Expose the port for the app (80) and the websocket server (8000)

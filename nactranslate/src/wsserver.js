@@ -1,7 +1,7 @@
 import {WebSocketServer} from 'ws'
 import axios from 'axios'
 
-const wss = new WebSocketServer({ port: 8000})
+const wss = new WebSocketServer({ port: 8000 })
 
 wss.on('connection', ws => {
     // console.log('Client connected')
@@ -22,7 +22,7 @@ wss.on('connection', ws => {
                 
                 // NOTE: for containers in docker, use "api" instead of "localhost" because CORS issues will prevent the containers from speaking to one another when networked as separate containers. Proxy for /api/process_audio is specified in nginx.conf
                 // const response = await axios.post('http://localhost:5000/process_audio', message, 
-                const response = await axios.post('http://api/process_audio', message, 
+                const response = await axios.post('http://api:5000/process_audio', message, 
                     {headers: {
                         'Content-Type': 'application/octet-stream',
                         'Lang-From': languageConfig.from,

@@ -56,7 +56,7 @@ const MicrophoneCapture = () => {
       workletNodeRef.current = new AudioWorkletNode(audioContextRef.current, 'pcm-processor')
 
       // Initialize WebSocket
-      const ws = new WebSocket('ws://localhost/websocket/') // DEV NOTE: FOR DOCKER NETWORK
+      const ws = new WebSocket('ws://localhost:8000/websocket/') // DEV NOTE: FOR DOCKER NETWORK
       // const ws = new WebSocket('ws://localhost:8000') // DEV NOTE: FOR LOCAL DEV SERVER
       socketRef.current = ws      // for language selection handler access
       ws.onopen = () => { 
