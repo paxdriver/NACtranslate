@@ -26,18 +26,19 @@ USER flaskuser
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r ./python-scripts/requirements.txt
 
+USER root
+
 # Copy the script that downloads and installs the text-to-text translation models to the python environment
 COPY ./src/backend/python-scripts/get_argos_models.py ./python-scripts/
 RUN ["python3", "./python-scripts/get_argos_models.py"]
 
-# Copy the API to the container
+# Copy the API to the container's scripts folder
 COPY nactranslate/src/backend/python-scripts/speech_to_text.py ./python-scripts/
 
 # Ensure your models are included, this is done manually https://alphacephei.com/vosk/models
 COPY ./vosk-models ./vosk-models
 
 # Ensure scripts have the correct permissions
-USER root
 RUN chown -R flaskuser:flaskuser /
 USER flaskuser
 
