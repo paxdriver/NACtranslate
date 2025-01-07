@@ -4,6 +4,7 @@
     "main": "wsserver.mjs",
     "type": "module",
     "dependencies": {
-        "ws": "^8.18.0"
+        "ws": "^8.18.0",
+        "axios": "^1.7.9"
     }
 }
