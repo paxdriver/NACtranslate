@@ -130,6 +130,7 @@ const MicrophoneCapture = () => {
             <option value='ru'>Russian</option>
             <option value='uk'>Ukrainian</option>
             <option value='de'>German</option>
+            <option value='es'>Spanish</option>
             <option value='ar'>Arabic</option>
             <option value='ca'>Catalan</option>
             <option value='pt'>Portuguese</option>
@@ -141,6 +142,7 @@ const MicrophoneCapture = () => {
           <select name="transcribedLanguage" onChange={handleLanguageChange} style={{margin: '0 3rem'}}>
             <option value='fr'>French</option>
             <option value='en'>English</option>
+            <option value='es'>Spanish</option>
             <option value='ru'>Russian</option>
             <option value='de'>German</option>
             <option value='uk'>Ukrainian</option>
