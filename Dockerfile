@@ -6,7 +6,7 @@ FROM python:3.10-slim
 # FROM python:3.10-slim-buster
 
 # Create non-root user for this Flask API endpoint image
-RUN useradd -m flaskuser
+# RUN useradd -m flaskuser
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -53,7 +53,7 @@ EXPOSE 5000
 # Run the Flask app
 # CMD ["python3", "./python-scripts/speech_to_text.py"]
 # Run Flask in WSGI instead of the Flask dev server
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:5000", "speech_to_text:app"]
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:5000", "python-scripts.speech_to_text:app"]
 
 # TEST WITH...
 # docker build -t flask-api .
