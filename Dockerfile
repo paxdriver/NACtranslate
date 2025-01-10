@@ -51,8 +51,9 @@ RUN find ./vosk-models -name '*.zip' -delete
 EXPOSE 5000
 
 # Run the Flask app
-CMD ["python3", "./python-scripts/speech_to_text.py"]
-
+# CMD ["python3", "./python-scripts/speech_to_text.py"]
+# Run Flask in WSGI instead of the Flask dev server
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:5000", "speech_to_text:app"]
 
 # TEST WITH...
 # docker build -t flask-api .
