@@ -1,5 +1,10 @@
 # Use the Node.js image to build the app with strict version to avoid future conflicts
-FROM node:18.18.0 AS builder
+
+# FOR DEV amd64 SYSTEM
+# FROM node:18.18.0 AS builder
+
+# FOR RASPBERRY PI 3B
+FROM node:18 AS builder
 
 # Create non-root user for this Flask API endpoint image
 # adduser is alpine base image tool, specific for docker as opposed to useradd -m which creates /home/ etc for normal debian distro users

@@ -1,0 +1,129 @@
+1) Build images on dev machine with arm64 architecture:
+
+docker buildx build --platform linux/arm64 -t flask-api:latest -f Dockerfile . --load
+
+docker buildx build --platform linux/arm64 -t react-frontend:latest -f ./nactranslate/Dockerfile ./nactranslate
+
+
+
+
+
+2) Save images to usb to transfer them to the raspberry pi:
+
+docker save -o /path/to/your/usb/flask-api.tar flask-api:latest
+docker save -o /path/to/your/usb/react-frontend.tar react-frontend:latest
+
+
+
+3) Update the docker-compose.yml that will be used on the rpi:
+
+version: '3.8'
+
+services:
+  api:
+    image: flask-api:latest  # Replace 'flask-api:latest' with the correct image tag if different
+    container_name: flask-api
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+
+  frontend:
+    image: react-frontend:latest  # Replace 'react-frontend:latest' with the correct image tag if different
+    container_name: react-frontend
+    ports:
+      - "80:80"     # For the React app
+      - "8000:8000" # For the WebSocket server
+    depends_on:
+      - api
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+
+
+
+
+4) Install docker on the pi: (note ".io")
+sudo apt-get install docker.io
+sudo usermod -aG docker $USER
+newgrp docker
+docker version
+
+(sudo chmod +x /var/run/docker -> might be necessary, if group permissions don't do the trick... see if it works with docker version before running this command. if it produces and error or warning, this will get you there.)
+
+
+
+
+5) Install docker-compose on the pi:
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+sudo chmod +x /usr/local/bin/docker-compose
+
+(check to see that it installed properly)
+docker-compose version 
+
+
+
+
+6) From the pi, with the images on usb, load them into docker:
+docker load < /path/to/flask-api.tar
+docker load < /path/to/react-frontend.tar
+
+
+
+
+
+7) Spin up the container networking both images
+docker-compose up -d
+
+
+
+
+*** START-UP SCRIPT ***
+Here’s how you can create a .bashrc script that will launch your Docker containers, start the browser, and set everything up when the Raspberry Pi starts.
+
+Script Requirements
+
+a) Check if Docker is running: Start Docker if it’s not already running.
+ - edit .bashrc script adding this to the end:
+# Launch Docker containers and browser on startup
+if [ "$(tty)" == "tty1" ]; then
+    echo "Starting Docker setup..."
+    
+    # Start Docker service if not running
+    if ! systemctl is-active --quiet docker; then
+        echo "Starting Docker service..."
+        sudo systemctl start docker
+    fi
+
+    # Navigate to project directory containing docker-compose.yml
+    cd /home/test/nactranslate/pi
+
+    # Bring up Docker containers
+    echo "Launching Docker containers..."
+    docker-compose up -d
+
+    # Wait a few seconds to ensure containers are up
+    sleep 5
+
+    # Open the browser to the app URL
+    echo "Launching browser..."
+    xdg-open http://localhost
+
+    # Prevent script from re-executing multiple times in the same session
+    export DOCKER_LAUNCH_DONE=1
+fi
+
+
+
+
+b) Run docker-compose up: Use the docker-compose.yml file to start the containers.
+
+c) Launch the browser: Open the browser to the correct URL (e.g., http://localhost).
+
+d) Ensure the script doesn’t launch multiple times: Add a check to prevent duplicate launches.
+

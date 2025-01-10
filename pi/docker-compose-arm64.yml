@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  api:
+    image: flask-api:latest  # Replace 'flask-api:latest' with the correct image tag if different
+    container_name: flask-api
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+
+  frontend:
+    image: react-frontend:latest  # Replace 'react-frontend:latest' with the correct image tag if different
+    container_name: react-frontend
+    ports:
+      - "80:80"     # For the React app
+      - "8000:8000" # For the WebSocket server
+    depends_on:
+      - api
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

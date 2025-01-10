@@ -1,5 +1,9 @@
 # Use the official Python image with a specific version
+# FOR DEV amd64 SYSTEM
 FROM python:3.10-slim
+
+# FOR RASPBERRY PI 3B ARM COMPATIBLE
+# FROM python:3.10-slim-buster
 
 # Create non-root user for this Flask API endpoint image
 RUN useradd -m flaskuser
