@@ -9,15 +9,15 @@ for package in available_packages:
     print(f'LANG: {package} \tFrom: {package.from_code} \t To: {package.to_code}')
     
 packages_to_install = [
-    ['en', 'ca'], ['ca', 'en'],     # english - catalan
-    ['ar', 'en'], ['en', 'ar'],     # english - arabic
+    # ['en', 'ca'], ['ca', 'en'],     # english - catalan
+    # ['ar', 'en'], ['en', 'ar'],     # english - arabic
     ['en', 'fr'], ['fr', 'en'],     # english - french
     ['en', 'de'], ['de', 'en'],     # english - german
-    ['en', 'it'], ['it', 'en'],     # english - italian
-    ['en', 'pt'], ['pt', 'en'],     # english - portuguese
+    # ['en', 'it'], ['it', 'en'],     # english - italian
+    # ['en', 'pt'], ['pt', 'en'],     # english - portuguese
     ['en', 'ru'], ['ru', 'en'],     # english - russian
     ['en', 'es'], ['es', 'en'],     # english - spanish
-    ['en', 'tl'], ['tl', 'en'],     # english - tagalog (phillippines)
+    # ['en', 'tl'], ['tl', 'en'],     # english - tagalog (phillippines)
     ['en', 'uk'], ['uk', 'en']      # english - ukrainian
 ]
 

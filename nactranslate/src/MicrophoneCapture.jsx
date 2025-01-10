@@ -41,12 +41,12 @@ const MicrophoneCapture = () => {
       mediaStreamRef.current = stream
 
       // Add a DynamicsCompressorNode to normalize audio
-      const compressor = audioContextRef.current.createDynamicsCompressor()
-      compressor.threshold.setValueAtTime(-50, audioContextRef.current.currentTime) // Adjust threshold
-      compressor.knee.setValueAtTime(40, audioContextRef.current.currentTime)       // Smoother transition
-      compressor.ratio.setValueAtTime(12, audioContextRef.current.currentTime)      // Compression ratio
-      compressor.attack.setValueAtTime(0.003, audioContextRef.current.currentTime)  // Attack time
-      compressor.release.setValueAtTime(0.25, audioContextRef.current.currentTime)  // Release time
+      // const compressor = audioContextRef.current.createDynamicsCompressor()
+      // compressor.threshold.setValueAtTime(-50, audioContextRef.current.currentTime) // Adjust threshold
+      // compressor.knee.setValueAtTime(40, audioContextRef.current.currentTime)       // Smoother transition
+      // compressor.ratio.setValueAtTime(12, audioContextRef.current.currentTime)      // Compression ratio
+      // compressor.attack.setValueAtTime(0.003, audioContextRef.current.currentTime)  // Attack time
+      // compressor.release.setValueAtTime(0.25, audioContextRef.current.currentTime)  // Release time
       
       const source = audioContextRef.current.createMediaStreamSource(stream)
 
@@ -84,8 +84,8 @@ const MicrophoneCapture = () => {
 
       // Connect the audio source to the worklet
       // Connect source -> compressor -> worklet
-      source.connect(compressor)
-      compressor.connect(workletNodeRef.current)
+      // source.connect(compressor)
+      // compressor.connect(workletNodeRef.current)
 
     } catch (error) {
       setStatus('Failed to connect microphone')
@@ -123,18 +123,10 @@ const MicrophoneCapture = () => {
           <label>Language Spoken:
           <select disabled={status === 'Microphone connected'} name="spokenLanguage"
             onChange={handleLanguageChange} 
-            style={{margin: '0 3rem'}}
-          >
+            style={{margin: '0 3rem'}}>
             <option value='en'>English</option>
-            <option value='fr'>French</option>
             <option value='ru'>Russian</option>
             <option value='uk'>Ukrainian</option>
-            <option value='de'>German</option>
-            <option value='es'>Spanish</option>
-            <option value='ar'>Arabic</option>
-            <option value='ca'>Catalan</option>
-            <option value='pt'>Portuguese</option>
-            <option value='tl'>Tagalog (Phillippines)</option>
           </select>
           </label>
 
@@ -144,12 +136,8 @@ const MicrophoneCapture = () => {
             <option value='en'>English</option>
             <option value='es'>Spanish</option>
             <option value='ru'>Russian</option>
-            <option value='de'>German</option>
             <option value='uk'>Ukrainian</option>
-            <option value='ar'>Arabic</option>
-            <option value='ca'>Catalan</option>
-            <option value='pt'>Portuguese</option>
-            <option value='tl'>Tagalog (Phillippines)</option>
+            <option value='de'>German</option>
           </select>
           </label>
 

@@ -2,7 +2,7 @@
 
 docker buildx build --platform linux/arm64 -t flask-api:latest -f Dockerfile . --load
 
-docker buildx build --platform linux/arm64 -t react-frontend:latest -f ./nactranslate/Dockerfile ./nactranslate
+docker buildx build --platform linux/arm64 -t react-frontend:latest -f ./nactranslate/Dockerfile ./nactranslate --load
 
 
 
