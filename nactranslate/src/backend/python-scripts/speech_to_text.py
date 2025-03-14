@@ -22,7 +22,7 @@ def translate_text(from_lang: str, to_lang: str, text: str) -> str:
 # NOTE: this buffer_size MUST match the BUFFER_SIZE in pcmProcessor.js. keep fine-tuning things but make sure that the values are updated in both places every time or nothing will work and no errors will be helpful.
 # BUFFER_SIZE = 4096 # 256ms
 # BUFFER_SIZE = 96000 # 96000 = 6 seconds
-BUFFER_SIZE = 48000 * 5
+BUFFER_SIZE = 48000 * 3
 VOSK_MODELS: dict[str, str] = {
     "en": "vosk-models/vosk-model-small-en-us-0.15",
     "es": "vosk-models/vosk-model-small-es-0.42",
@@ -34,7 +34,7 @@ VOSK_MODELS: dict[str, str] = {
     "de": "vosk-models/vosk-model-small-de-0.15",
     # "ar": "vosk-models/vosk-model-small-ar-tn-0.1-linto",
     "ar": "vosk-models/vosk-model-ar-mgb2-0.4",
-    "ca": "vosk-models/vosk-model-small-ca-0.4"
+    # "ca": "vosk-models/vosk-model-small-ca-0.4"
 }
 
 app = Flask(__name__)
