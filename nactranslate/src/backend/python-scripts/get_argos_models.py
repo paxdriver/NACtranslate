@@ -11,7 +11,7 @@ for package in available_packages:
     
 packages_to_install = [
     # ['en', 'ca'], ['ca', 'en'],     # english - catalan
-    # ['ar', 'en'], ['en', 'ar'],     # english - arabic
+    ['ar', 'en'], ['en', 'ar'],     # english - arabic
     ['en', 'fr'], ['fr', 'en'],     # english - french
     ['en', 'de'], ['de', 'en'],     # english - german
     # ['en', 'it'], ['it', 'en'],     # english - italian

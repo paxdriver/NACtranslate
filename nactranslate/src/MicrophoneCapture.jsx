@@ -62,7 +62,7 @@ const MicrophoneCapture = () => {
       ws.onopen = () => { 
         console.log('WebSocket connection established')
         if (langselections) ws.send(JSON.stringify(langselections))
-        else ws.send(JSON.stringify({from: "en", to: "ru"}))
+        else ws.send(JSON.stringify({from: "en", to: "fr"}))
       }
       ws.onerror = err => console.error('WebSocket error:', err)
       ws.onclose = () => console.log('WebSocket connection closed')
@@ -125,8 +125,12 @@ const MicrophoneCapture = () => {
             onChange={handleLanguageChange} 
             style={{margin: '0 3rem'}}>
             <option value='en'>English</option>
+            <option value='fr'>French</option>
             <option value='ru'>Russian</option>
             <option value='uk'>Ukrainian</option>
+            <option value='es'>Spanish</option>
+            <option value='de'>German</option>
+            <option value='ar'>Arabic</option>
           </select>
           </label>
 
@@ -138,6 +142,7 @@ const MicrophoneCapture = () => {
             <option value='ru'>Russian</option>
             <option value='uk'>Ukrainian</option>
             <option value='de'>German</option>
+            <option value='ar'>Arabic</option>
           </select>
           </label>
 
