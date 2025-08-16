@@ -21,7 +21,8 @@ def translate_text(from_lang: str, to_lang: str, text: str) -> str:
 
 # Buffer size for Vosk internal processing - this is for reading chunks from the complete audio data
 # 4096 is a common value for Vosk processing chunks
-BUFFER_SIZE = 4096
+# BUFFER_SIZE = 4096
+BUFFER_SIZE = 65536 # testing larger buffer size
 
 VOSK_MODELS: dict[str, str] = {
     "en": "vosk-models/vosk-model-small-en-us-0.15",
@@ -39,27 +40,27 @@ app = Flask(__name__)
 
 @app.route("/process_audio", methods=["POST"])
 def process_audio():
-    # Get the complete audio recording from the request
+    # Get the complete audio recording from the request body
     audio_data = request.data
-    audio_stream = io.BytesIO(audio_data)
     
-    # Get language configuration from headers
+    # Extract language configuration from request headers
     from_lang = request.headers.get('Lang-From', "en")
     to_lang = request.headers.get('Lang-To', "ru")
     
     print(f"Processing audio: {len(audio_data)} bytes, {from_lang} -> {to_lang}")
     
-    # Get the absolute path to the Vosk model
+    # Resolve file paths for Vosk model directory
     current_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(current_dir)
     
+    # Validate and get the correct Vosk model path for source language
     try:
         vosk_model_filepath = VOSK_MODELS.get(from_lang)
-        if vosk_model_filepath and vosk_model_filepath != None:
+        if vosk_model_filepath:
             model_path = os.path.join(parent_dir, vosk_model_filepath)
         else:
             print("-" * 25)
-            print("ERROR!!!! Unable to retrieve vosk model from supplied filepath.")
+            print("ERROR: Unable to retrieve vosk model from supplied filepath.")
             print(f"Requested language: {from_lang}")
             print("Available models:", list(VOSK_MODELS.keys()))
             print("-" * 25)
@@ -71,60 +72,33 @@ def process_audio():
         print(f"Error: {e}")
         return {"text": "Error: Model resolution failed"}
 
-    # Load the Vosk model
+    # Initialize Vosk model and recognizer with 16kHz sample rate
     model = Model(model_path)
     recognizer = KaldiRecognizer(model, 16000)
     
-    # Reset audio stream position
-    audio_stream.seek(0)
+    print("Processing complete audio recording...")
     
-    # Process the complete audio recording
-    transcription = ""
-    partial_text = ""
+    # Feed the entire audio recording to Vosk recognizer at once
+    # This processes the complete utterance instead of streaming chunks
+    recognizer.AcceptWaveform(audio_data)
     
-    print("Starting audio processing...")
-    
-    # Process audio in chunks for Vosk, but treat as one complete recording
-    while True:
-        chunk = audio_stream.read(BUFFER_SIZE)
-        if len(chunk) == 0:
-            break
-            
-        if recognizer.AcceptWaveform(chunk):
-            result = json.loads(recognizer.Result())
-            chunk_text = result.get("text", "").strip()
-            if chunk_text:
-                print(f"Final chunk result: '{chunk_text}'")
-                transcription += " " + chunk_text
-        else:
-            partial_result = json.loads(recognizer.PartialResult())
-            partial_text = partial_result.get("partial", "")
-            if partial_text:
-                print(f"Partial result: '{partial_text}'")
-    
-    # Get any remaining results after processing all audio
+    # Get the final transcription result from the complete audio
     final_result = json.loads(recognizer.FinalResult())
-    final_text = final_result.get("text", "").strip()
-    if final_text:
-        print(f"Final result: '{final_text}'")
-        transcription += " " + final_text
-    
-    # Clean up transcription
-    transcription = transcription.strip()
-    
-    if not transcription:
-        # If no final transcription, try to use the last partial result
-        transcription = partial_text.strip()
+    transcription = final_result.get("text", "").strip()
     
     print(f"Complete transcription: '{transcription}'")
     
-    # Translate if needed
+    # Handle translation if source and target languages are different
     if from_lang and to_lang and from_lang != to_lang and transcription:
         translated_text = translate_text(from_lang, to_lang, transcription)
         print(f"Translation: '{translated_text}'")
         return {"text": translated_text}
+    
+    # Return transcription if no translation needed or same language
     elif transcription:
         return {"text": transcription}
+    
+    # Return error message if no speech was detected in the audio
     else:
         return {"text": "No speech detected"}
 
