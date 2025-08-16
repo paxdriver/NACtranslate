@@ -30,6 +30,7 @@ const MicrophoneCapture = () => {
     const startRecording = useCallback(() => {
         if (workletNodeRef.current && !isRecording && !isProcessing) {
             console.log('Starting recording...')
+            document.body.classList.add('recording-avctive')
             setIsRecording(true)
             workletNodeRef.current.port.postMessage({ command: 'START_RECORDING' })
         }
@@ -38,6 +39,7 @@ const MicrophoneCapture = () => {
     const stopRecording = useCallback(() => {
         if (workletNodeRef.current && isRecording) {
             console.log('Stopping recording...')
+            document.body.classList.remove('recording-active')
             setIsRecording(false)
             setIsProcessing(true)
             workletNodeRef.current.port.postMessage({ command: 'STOP_RECORDING' })
@@ -47,9 +49,9 @@ const MicrophoneCapture = () => {
     // Keyboard event handlers
     useEffect(() => {
         const handleKeyDown = (event) => {
-            if (event.code === 'Space' && !event.repeat && status === 'Microphone connected') {
-                event.preventDefault()
-                startRecording()
+            if (event.code === 'Space' && status === 'Microphone connected') {
+                event.preventDefault() // prevent page scroll from holding spacebar
+                if (!event.repeat) startRecording()
             }
         }
 
@@ -176,7 +178,7 @@ const MicrophoneCapture = () => {
                             <option value='tl'>Tagalog (Philippines)</option>
                         </select>
                     </label>
-
+                  <br />
                     <label>Language Transcribed:
                         <select 
                             name="transcribedLanguage" 
@@ -203,7 +205,7 @@ const MicrophoneCapture = () => {
                 <button onClick={handleMicAccess} style={{border:'2px solid red'}}>
                     Connect Microphone
                 </button>
-                &nbsp;&nbsp;
+                &nbsp;&nbsp;<br />
                 <button onClick={handleStopMic} style={{border:'2px solid red'}}>
                     Disconnect Microphone
                 </button>
