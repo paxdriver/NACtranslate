@@ -60,8 +60,8 @@ WORKDIR /app
 EXPOSE 80 8000
 
 # Start Nginx and the WebSocket Server when the container starts
-CMD ["sh", "-c", "nginx -g 'daemon off;' & node /app/websocket/wsserver.mjs"]
-
+# CMD ["sh", "-c", "nginx -g 'daemon off;' & node /app/websocket/wsserver.mjs"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "speech_to_text:app"]
 # TEST WITH THESE COMMANDS
 # docker exec -it <container_id> sh
 # node /usr/share/nginx/html/wsserver.js
