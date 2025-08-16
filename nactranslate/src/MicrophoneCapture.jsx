@@ -1,4 +1,6 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import './App.css'
+import './index.css'
 
 const MicrophoneCapture = () => {
     const [status, setStatus] = useState('')

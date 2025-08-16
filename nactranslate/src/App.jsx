@@ -1,5 +1,4 @@
 import './index.css'
-// import './App.css'
 import MicrophoneCapture from './MicrophoneCapture'
 
 const App = () => {

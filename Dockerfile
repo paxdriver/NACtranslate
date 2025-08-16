@@ -51,8 +51,8 @@ RUN find ./vosk-models -name '*.zip' -delete
 EXPOSE 5000
 
 # Run the Flask app
-CMD ["python3", "./python-scripts/speech_to_text.py"]
-
+# CMD ["python3", "./python-scripts/speech_to_text.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "python-scripts.speech_to_text:app"]
 
 # TEST WITH...
 # docker build -t flask-api .
