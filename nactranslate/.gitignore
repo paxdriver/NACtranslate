@@ -36,3 +36,15 @@ dist/
 
 # Environment variables
 .env
+
+# Language models
+../vosk-models/
+
+# Python text-to-speech script copy is included in the "backend" folder
+../python-scripts/
+
+.vite
+.gitignore
+../NACtranslate.code-workspace
+
+../2025-01-03.mp4

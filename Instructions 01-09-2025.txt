@@ -7,7 +7,6 @@ docker buildx build --platform linux/arm64 -t react-frontend:latest -f ./nactran
 
 
 
-
 2) Save images to usb to transfer them to the raspberry pi:
 
 docker save -o /path/to/your/usb/flask-api.tar flask-api:latest
