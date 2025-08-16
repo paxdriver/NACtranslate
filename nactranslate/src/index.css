@@ -17,7 +17,7 @@
     --warning: #ff9800;
     --error: #f44336;
     --border: rgba(255, 255, 255, 0.1);
-    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow: rgba(0, 0, 0, 0.8);
 
     color: var(--text-primary);
     background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
@@ -88,15 +88,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 32px var(--shadow);
+    box-shadow: 0 4px 12px var(--shadow);
     position: relative;
     overflow: hidden;
-}
-
-.app-logo::before {
-    content: "🗣️";
-    font-size: 2rem;
-    animation: pulse 2s infinite;
 }
 
 .app-title {
