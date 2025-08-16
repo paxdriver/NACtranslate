@@ -32,7 +32,7 @@ const MicrophoneCapture = () => {
     const startRecording = useCallback(() => {
         if (workletNodeRef.current && !isRecording && !isProcessing) {
             console.log('Starting recording...')
-            document.body.classList.add('recording-avctive')
+            document.body.classList.add('recording-active')
             setIsRecording(true)
             workletNodeRef.current.port.postMessage({ command: 'START_RECORDING' })
         }
