@@ -1,3 +1,5 @@
 This folder should contain speech models needed for text to speech translations. Not included in the repo due to size and redundancy, but find the language models you want to include at: https://alphacephei.com/vosk/models
 
 python-scripts/speech-to-text.py will look for models at "../vosk-models/"
+
+python-scripts should be in the same directory as docker-compose at root with vosk-models/ folder and the extracted models you've downloaded next to the python-scripts folder when building with docker-compose. the necessary copy operations into the docker images are done automatically into nactranslate/backend/vosk-models and nactranslate/backend/python-scripts respectively.
