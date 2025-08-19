@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import './App.css'
 import './index.css'
 
 const MicrophoneCapture = () => {
@@ -155,18 +154,44 @@ const MicrophoneCapture = () => {
         setIsRecording(false)
         setIsProcessing(false)
     }
+return (
+    <div className="app-container">
 
-    return (
-        <div>
-            {/* Language Selection */}
-            <div style={{textAlign: 'center', margin: '0.25rem', padding: '0.25rem', backgroundColor: 'rgba(180,180,180,0.25)', border: '3px dashed black'}}>
-                <div><strong>
-                    <label>Language Spoken:
+
+        {/* Top Banner - Language & Connection */}
+        <div className="control-banner">
+            <div className="app-logo"></div>
+            
+            <div className="banner-content">
+                <div className="banner-top-row">
+                    <h1 className="app-title">NAC Translate: Privacy-Focused Translation</h1>
+                    
+                    <div className="connection-controls">
+                        <div className={`mic-status ${status === 'Microphone connected' ? 'mic-connected' : 'mic-disconnected'}`}>
+                            Status: {status}
+                        </div>
+                        
+                        <button 
+                            className={`btn ${status === 'Microphone connected' ? 'btn-connect' : 'btn-connect'}`}
+                            onClick={status === 'Microphone connected' ? handleStopMic : handleMicAccess}
+                        >
+                            {status === 'Microphone connected' ? 'Disconnect' : 'Connect Mic'}
+                        </button>
+
+                        <button className="btn btn-disconnect" onClick={handleStopMic} title="Emergency Stop">
+                            🛑
+                        </button>
+                    </div>
+                </div>
+
+                <div className="language-section">
+                    <div className="language-group">
+                        <label>Spoken Language:</label>
                         <select 
                             disabled={status === 'Microphone connected'} 
                             name="spokenLanguage"
-                            onChange={handleLanguageChange} 
-                            style={{margin: '0 3rem'}}
+                            value={langselections.from}
+                            onChange={handleLanguageChange}
                         >
                             <option value='en'>English</option>
                             <option value='fr'>French</option>
@@ -179,13 +204,13 @@ const MicrophoneCapture = () => {
                             <option value='pt'>Portuguese</option>
                             <option value='tl'>Tagalog (Philippines)</option>
                         </select>
-                    </label>
-                  <br />
-                    <label>Language Transcribed:
+                    </div>
+                    <div className="language-group">
+                        <label>Translate To:</label>
                         <select 
-                            name="transcribedLanguage" 
-                            onChange={handleLanguageChange} 
-                            style={{margin: '0 3rem'}}
+                            name="transcribedLanguage"
+                            value={langselections.to} 
+                            onChange={handleLanguageChange}
                         >
                             <option value='fr'>French</option>
                             <option value='en'>English</option>
@@ -196,89 +221,80 @@ const MicrophoneCapture = () => {
                             <option value='ar'>Arabic</option>
                             <option value='ca'>Catalan</option>
                             <option value='pt'>Portuguese</option>
-                            <option value='tl'>Tagalog (Philippines)</option>
+                            <option value='tl'>Tagalog (Philippines)</option> 
                         </select>
-                    </label>
-                </strong></div>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            {/* Microphone Connectivity */}
-            <div style={{border: '3px dotted black', padding: '1rem', margin: '1rem', backgroundColor: 'rgba(200, 50,50,0.25)'}}>
-                <button onClick={handleMicAccess} style={{border:'2px solid red'}}>
-                    Connect Microphone
-                </button>
-                &nbsp;&nbsp;<br />
-                <button onClick={handleStopMic} style={{border:'2px solid red'}}>
-                    Disconnect Microphone
-                </button>
-                <strong><p>{status}</p></strong>
+        {/* Main Translation Area */}
+        <div className="translation-area">
+            <div className="translation-header">
+                Live Translation
             </div>
-
-            {/* Push-to-Talk Recording Button - This should always show when mic is connected */}
+            
+            <div className="translation-content">
+                {isRecording && (
+                    <div className="recording-indicator">
+                        🔴 Recording... Release to translate
+                    </div>
+                )}
+                
+                {isProcessing && (
+                    <div className="processing-indicator">
+                        ⚡ Processing translation...
+                    </div>
+                )}
+                
+                {!isRecording && !isProcessing && subtitles === "" && (
+                    <div className="recording-prompt">
+                        {status === 'Microphone connected' 
+                            ? "Hold spacebar or the button below to start recording"
+                            : "Connect microphone to begin"
+                        }
+                    </div>
+                )}
+                
+                <div className="translation-messages">
+                    {subtitles.split('\n\n').filter(msg => msg.trim()).map((message, index) => (
+                        <div key={index} className="translation-message">
+                            <div className="translation-text">{message.replace(/^-\s*/, '')}</div>
+                            <div className="translation-timestamp">{new Date().toLocaleTimeString()}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            
+            {/* Push to Talk - Bottom of Translation Area */}
             {status === 'Microphone connected' && (
-                <div style={{textAlign: 'center', margin: '1rem', padding: '1rem', border: '3px solid blue', backgroundColor: 'rgba(50, 50, 200, 0.25)'}}>
+                <div className="ptt-container">
                     <button
-                        onMouseDown={(e) => {
+                        className={`ptt-button ${isProcessing ? 'ptt-processing' : isRecording ? 'ptt-recording' : 'ptt-idle'}`}
+                        onMouseDown={ e => {
                             e.preventDefault()
                             startRecording()
                         }}
-                        onMouseUp={(e) => {
+                        onMouseUp={ e=> {
                             e.preventDefault()
                             stopRecording()
                         }}
                         onMouseLeave={() => {
-                            if (isRecording) {
-                                stopRecording()
-                            }
+                            // Handles the case where user clicks and holds the button to record, but then moves the mouse cursor off the button while still holding down the mouse button. Without this, they'd be stuck recording until they moved back to the button and released. It's a UX safety feature.
+                            if (isRecording) stopRecording()
                         }}
                         disabled={isProcessing}
-                        style={{
-                            padding: '20px 40px',
-                            fontSize: '18px',
-                            border: '3px solid',
-                            borderColor: isRecording ? 'red' : 'blue',
-                            backgroundColor: isRecording ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 0, 255, 0.3)',
-                            color: 'black',
-                            borderRadius: '10px',
-                            cursor: isProcessing ? 'not-allowed' : 'pointer',
-                            userSelect: 'none'
-                        }}
                     >
-                        {isProcessing ? 'Processing...' : 
-                         isRecording ? 'Recording... (Release to translate)' : 
-                         'Hold to Record'}
+                        {isProcessing ? '...' : isRecording ? 'Recording' : 'Hold'}
                     </button>
-                    <p><strong>Hold the button above or press and hold SPACEBAR to record</strong></p>
-                    {isProcessing && <p style={{color: 'orange'}}>⏳ Translating your speech...</p>}
+                    <div className="ptt-instructions">
+                        Hold button or spacebar to record
+                    </div>
                 </div>
             )}
-
-            {/* Always show button area for debugging, even if mic not connected */}
-            {status !== 'Microphone connected' && status !== '' && (
-                <div style={{textAlign: 'center', margin: '1rem', padding: '1rem', border: '3px dashed gray', backgroundColor: 'rgba(128, 128, 128, 0.25)'}}>
-                    <p>Connect microphone to enable recording</p>
-                </div>
-            )}
-
-            {/* Subtitles Display */}
-            <pre 
-                id="subtitlesText" 
-                style={{
-                    whiteSpace: 'pre-wrap', 
-                    wordWrap: 'break-word', 
-                    border: '5px inset black', 
-                    height: '50vh', 
-                    width: '80vw', 
-                    fontSize: '1rem', 
-                    textAlign: 'left', 
-                    overflowY: 'scroll',
-                    padding: '10px'
-                }}
-            >
-                {subtitles}
-            </pre>
         </div>
-    )
+    </div>
+)
 }
 
 export default MicrophoneCapture

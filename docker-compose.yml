@@ -10,8 +10,10 @@ services:
       - "5000:5000"
     networks:
       - app-network
+    restart: unless-stopped  # Auto-restart on crashes
 
   frontend:
+    # image: react-frontend:latest  # use pre-built image
     build:
       context: ./nactranslate
       dockerfile: Dockerfile
@@ -23,6 +25,7 @@ services:
       - api
     networks:
       - app-network
+    restart: unless-stopped
 
 networks:
   app-network:
