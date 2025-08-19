@@ -10,6 +10,8 @@ NACtranslate is designed to facilitate real-time translation for live church ser
 
 This project prioritizes privacy by keeping all user interactions on your private network. It avoids using external APIs to ensure that client data remains strictly confidential—a key consideration for environments such as churches, accounting, healthcare, and legal services.
 
+[![NACtranslate Demo Video](http://img.youtube.com/vi/xH9t3SOSoH8/0.jpg)](https://www.youtube.com/watch?v=xH9t3SOSoH8)
+
 ## Features
 
 - Real-time speech-to-text conversion using Vosk.
