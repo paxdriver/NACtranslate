@@ -188,7 +188,6 @@ return (
                     <div className="language-group">
                         <label>Spoken Language:</label>
                         <select 
-                            disabled={status === 'Microphone connected'} 
                             name="spokenLanguage"
                             value={langselections.from}
                             onChange={handleLanguageChange}

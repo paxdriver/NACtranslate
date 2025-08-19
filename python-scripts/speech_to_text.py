@@ -2,10 +2,8 @@
 
 from vosk import Model, KaldiRecognizer
 from flask import Flask, request
-import io
 import os
 import json
-import argostranslate.package
 import argostranslate.translate
 
 def translate_text(from_lang: str, to_lang: str, text: str) -> str:
@@ -20,9 +18,7 @@ def translate_text(from_lang: str, to_lang: str, text: str) -> str:
         return ""
 
 # Buffer size for Vosk internal processing - this is for reading chunks from the complete audio data
-# 4096 is a common value for Vosk processing chunks
-# BUFFER_SIZE = 4096
-BUFFER_SIZE = 65536 # testing larger buffer size
+BUFFER_SIZE = 65536
 
 VOSK_MODELS: dict[str, str] = {
     "en": "vosk-models/vosk-model-small-en-us-0.15",
