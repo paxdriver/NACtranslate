@@ -157,7 +157,6 @@ const MicrophoneCapture = () => {
 return (
     <div className="app-container">
 
-
         {/* Top Banner - Language & Connection */}
         <div className="control-banner">
             <div className="app-logo"></div>
