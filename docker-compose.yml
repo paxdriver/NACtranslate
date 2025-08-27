@@ -13,7 +13,6 @@ services:
     restart: unless-stopped  # Auto-restart on crashes
 
   frontend:
-    # image: react-frontend:latest  # use pre-built image
     build:
       context: ./nactranslate
       dockerfile: Dockerfile

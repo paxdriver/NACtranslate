@@ -10,7 +10,36 @@ const MicrophoneCapture = () => {
     const workletNodeRef = useRef(null)
     const socketRef = useRef(null)
     const [subtitles, setSubtitles] = useState("")
-    const [langselections, setLangselections] = useState({from: "en", to: "fr"})
+
+    // Load saved language preferences or use defaults
+    const [langselections, setLangselections] = useState(() => {
+        const saved = localStorage.getItem('nactranslate-languages')
+        if (saved) {
+            try {
+                return JSON.parse(saved)
+            } catch {
+                return {from: "en", to: "fr"}
+            }
+        }
+        return {from: "en", to: "fr"}
+    })
+
+    // Save language preferences whenever they change
+    useEffect(() => {
+        localStorage.setItem('nactranslate-languages', JSON.stringify(langselections))
+    }, [langselections])
+
+    // Swap languages function
+    const swapLanguages = useCallback(() => {
+        setLangselections(prev => {
+            const swapped = { from: prev.to, to: prev.from }
+            
+            if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+                socketRef.current.send(JSON.stringify(swapped))
+            }
+            return swapped
+        })
+    }, [])
 
     const handleLanguageChange = e => {
         const { name, value } = e.target
@@ -54,6 +83,14 @@ const MicrophoneCapture = () => {
                 event.preventDefault() // prevent page scroll from holding spacebar
                 if (!event.repeat) startRecording()
             }
+        
+            // Swap spoken and translated languages quickly
+            if (event.key === 's' || event.key === 'S') {
+                if (!isRecording && !isProcessing) { // Don't swap during recording
+                    event.preventDefault()
+                    swapLanguages()
+                }
+            }
         }
 
         const handleKeyUp = (event) => {
@@ -65,11 +102,13 @@ const MicrophoneCapture = () => {
 
         window.addEventListener('keydown', handleKeyDown)
         window.addEventListener('keyup', handleKeyUp)
+        
 
         return () => {
             window.removeEventListener('keydown', handleKeyDown)
             window.removeEventListener('keyup', handleKeyUp)
         }
+
     }, [startRecording, stopRecording, status])
 
     const handleMicAccess = async () => {
@@ -184,6 +223,7 @@ return (
                 </div>
 
                 <div className="language-section">
+                    {/* SPOKEN LOANGUAGE */}
                     <div className="language-group">
                         <label>Spoken Language:</label>
                         <select 
@@ -203,6 +243,24 @@ return (
                             <option value='tl'>Tagalog (Philippines)</option>
                         </select>
                     </div>
+                    
+                    {/* Language Selection with Swap Button */}
+                    <button 
+                        onClick={swapLanguages}
+                        disabled={isRecording || isProcessing}
+                        style={{
+                            padding: '8px 12px',
+                            fontSize: '16px',
+                            border: '2px solid blue',
+                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                            borderRadius: '5px',
+                            cursor: isRecording || isProcessing ? 'not-allowed' : 'pointer'
+                        }}
+                        title="Swap languages (Press 'S' key)"
+                    >⟷ "s"
+                    </button>
+                    
+                    {/* TRANSLATED LANGUAGE */}
                     <div className="language-group">
                         <label>Translate To:</label>
                         <select 
